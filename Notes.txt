@@ -1,0 +1,410 @@
+Part 2
+
+###### Taste
+
+Distributed Internet Routing
+~ centralized internet routing is hard because the graph of routers and connections is too huge to store in any single router.
+~ instead we use the Bellman-Ford algorithm, its somehow distributed (local computations, each router does some work)
+
+Sequence Alignment
+~ figure out sequence similarity. for evolutionary similarity OR genome function
+~ goal : find best sequence alignment based on the cost of gaps and mismatches
+~ Needleman-Wunsch score
+
+####### Greedy Algorithms
+~ Divide and Conquer (merge sort & Strassen), Randomized (Min Cut Edge Contraction & quick sort)... recurse on smaller subproblems and merge the results ... have a procedure dependent on a random element.
+~ Greedy : iteratively make irrevocable, myopic decisions (Djikstra)
+~ Dynamic : DIR, SA
+~ greedy application : optimal caching. minimize cache misses. cache is small fast memory. 
+	whenever you get a request, you give it to the client and then put it in the cache. If cache is full and you get a new request that isn't in 
+	the cache (a fault / cache miss), what do you evict from the cache to make room for the new guy, to minimize future misses.
+~ Belady Optimal Caching Algorithm : furthest in the future. evict the ones that will be accessed furthest in the future.
+	implimentation requires domain knowledge, what will be accessed furthest in the future?
+		least recently used : evict the stuff that hasn't been used for the longest time. lclty rfrnc (need to track order of most recent use)
+	good benchmark 
+
+##### Scheduling : Greedy
+~ distribute use of a shared and limited resource to accomplish a goal
+~ ex. resource is a processor, users are processes, goal is to finish all processes as quickly as possible (there may be dependencies)
+~ what order do we do the tasks in?
+~ jobs have a weight(their priority) and length (how long they take)
+~ completion times : length of current job plus all previous jobs
+~ many different objective functions
+~ goal :  minimize the weighted sum of completion times. (ie. put the heavy weight jobs first, minimize weighted average)
+~ loosened rules can lead to good heuristics, special cases can lead to good algos
+~ ex. if lengths all = , weights diff, do the heaviest jobs first. 
+~ ex. if weights all =, lengths diff, do the shortest jobs first.
+~ ex. general : 
+	if weights same, or lengths same, easy choice
+	if A's weight larger and length shorter easy choice
+	if weight larger and length larger try doing in decreasing order of weight - length or weight / length
+~ tip : if you have two algorithms whose correctness you arent' sure of, find a case where they do different things
+~ this will show you that weight - length does not produce optimal ordering.
+~ algo : ordering by decreasing ratio of weight to length is optimal.
+~ O(nlogn)
+~ Proof of Correctness : Exchange Argument. simplifying assumption, no ties.
+	proof by contradiction : sigma = greedy schedule, assume sigma* is a better schedule than sigma and optimal
+		show there is a sigma**
+		sigma** has two jobs where the earlier job has a lower weight/length ratio
+		switch the order of those two jobs
+		the exchange will decrease the weighted sum of completion times
+		why?
+		the completion time of the higher ratio job increases by the length of the lower ratio job
+		the completion time of the lower ratio job decreases by the length of the higher ratio job
+		the cost of the swap is the weight of the lower ratio * the length of the higher ratio
+		the benefit of the swap is the weight of the higher ratio * the length of the smaller ratio
+		we know : w_higher / l_higher > w_lower / l_lower so w_higher * l_lower > w_lower * l_higher
+		the benefit > cost, and this is true whenever a higher ratio is placed after a lower ratio.
+		swapping will always decrease cost, so greedy high_ratio -> low_ratio is just right
+	NEGATIVE LENGTH NOT ALLOWED
+
+##### Minimum Spanning Tree : Greedy
+~ connect nodes as cheaply as possible. applications in clustering and networking
+~ Minimum Spanning Forest : find min cost subgraph for each component
+~ undirected graphs. Optimal Branching Problem is directed graph version of MST
+~ edges have costs.
+~ output minimum spanning tree
+~ cost of graph is sum of all edges
+~ no cycles allowed, mincut is of size 1
+~ spanning means its connected. 
+~ we want cheapest connected graph
+~ MST is unique with distinct edge costs
+~ multiple correct greedy algorithms
+~ Prim's Algorithm: O(mlogn) uses heap.
+	randomly choose source vertex
+	add the cheapest edge linking a vertex you have to a vertex you don't, and add its vertex
+	repeat until you have all edges
+~ Cut Property : guarantees adding an edge will not produce a non minimum spanning tree. 
+		if an edge is the cheapest crossing edge of a cut then it should be part of your spanning tree.
+~ Implimentation with Heap :
+	Heap contains vertices we haven't yet explored
+	key is cheapest edge connecting vertex to an already explored vertex
+
+~ Kruskal's Algorithm: O(mlogn) uses union-find data structure. O(mn) without union-find
+~ algo:
+	pick cheapest edge that doesn't form a cycle(check for uv path with BFS) at each iteration, stop when you've gone through all the edges
+	sorting edges takes O(mlogn)
+	Union-Find can find cycles in O(1) so the main loop is O(n) instead of O(mn) without union-find
+	each graph component is a segment of the partition
+	if an edge chosen by kruskal connects two vertices in different groups, union the groups, otherwise continue onto the next edge
+~ Union Find: maintain a partition of a set of objects
+~ find the partition in which an object lives O(1)
+~ fuse two partitions O(1)
+
+~ Clustering : application of MST
+~ goal : cluster objects into coherent groups (unsupervised learning)
+~ distance function : symmetric
+~ max-spacing k-clusterings : objective function looks at points in separate clusters.
+~ spacing : distance between the two most similar points in different clusters. Maximize this function.
+~ greedy solution :  fuse clusters of closest pair of separated points, until you have k-clusterings. like kruskal that stops early
+~ single-link clustering
+
+******************************
+~ Huffman Codes : lossless compression
+~ binary code : maps alphabet to binary strings. (fixed length). variable length also possible, used in practice
+~ variable length problem : don't know where one ends and the next starts
+~ solution : prefix-free codes : there is no letter whose binary string, of length n, is identical to the first n bits of another letter's binstr
+~ useful for non-uniform frequency alphabets. ARE YOU SAVING ON TIME ???? OR JUST SPACE
+~ huffman code : provides optimal prefix free variable length encoding, (given frequencies?)
+~ encoding represented as tree : non-root nodes represent alphabet members. left branch = 0., right = 1, root = empty string. 
+~ prefix free, characters only at leaves
+~ of the form : 0, 10, 110, 1110, etc. last one is 1111....111  
+	
+~ Dynamic Programming 
+~ describe optimal solution in terms of optimal solutions to subproblems
+~ identify a small number of subproblems
+~ solve "larger" subproblems in terms of "smaller" subproblems
+
+~ O(n) Maximum Weighted Independent Sets ****** GORGEOUS $$$$
+~ input : path graph, non-negative weights on vertices
+~ goal : return heaviest indendent set (non-consecutive vetrtices)
+~ optimal solution to full graph is either...  
+	the optimal solution to the graph without the final vertex 
+	the optimal solution to the graph without the final two vertices, plus the final vertex 
+~ there are n subproblems where n is the number of vertices. 
+~ cache the result of subproblem of length n. Memoization
+~ solution to subproblem n = max ( solution to n-1,  solution to n-2 + value of vertice n ) 
+~ can reconstruct optimal solution from array of subproblem solution weights
+	start from solution n
+	if n-1 != n then vertex n is in the solution jump to n-2
+	if n-1 == n then vertex n-1 is in the solution jump to n-3
+	if n=1, it's in the solution, if n <= 0 stop
+ 
+
+~ Knapsack Problem O(nW)
+~ each item has weight and value, knapsack has capacity. select subset that maximizes value while staying within capacity
+~ solution to all n item solution equals
+	n-1 item solution with capacity W, if item n is not in the solution to n
+	(n-1 item solution with capacity W - w_n) + v_n, if item n is in the solution to n
+~ make a 2D array of num items and knapsack weights. go through the whole thing, computing everything using the recurrence defined above
+~ can reconstruct which items were chosen from the filled in value table.
+~ n ranges from 0 to n :  at n = 0, value is 0
+
+
+~ Sequence Alignment O(mn)
+~ minimize penalties : there are gap penalties and mismatch penalties
+~ input : two input strings, cost of gap penalty, cost of mismatch penalty
+~ solution : where to insert gaps that minimize total penalty . also, final lengths must be the same.
+~ if we had an optimal solution, last position could be non-gap for both strings, gap for first non for second, or non for first gap for second.
+	in case 1 : the first string without its final element and the second string without its final element are also an optimal sub-alignment
+	in case 2 : the first string and the second string without its final element are an optimal sub-alignment	
+	in case 3 : the first string without its final element and the second string are an optimal sub-alignment
+~ the recurrence is like this . cost of optimal alignment for string X_n and  Y_m is ... note : n-1 means the first n-1 characters 
+	cost of x_n and y_m mismatch + cost of X_n-1 and Y_m-1 alignment
+	cost of gap + cost of X_n and Y_m-1 alignment
+	cost of gap + cost of X_n-1 and Y_m alignment
+~ again make a 2D array, each axis corresponding to the length of the string X, Y
+~ base case, one string of length 0, cost is gap_cost * length_other_string
+~ can reconstruct actual strings
+
+*****************************
+~ Optimal Binary Search Trees O(n^3) .... O(n^2) possible with optimization of the root choosing step for each contiguous subset entry
+~ goal : make binary search tree that minimize expected search time given probabilities for keys
+~ Input : key probabilities
+~ needs to beat O(logn) to be worthwhile, otherwise use BST
+~ constraint : maintain search tree property
+~ in an optimal search tree, the subtrees of the root are both optimal search trees
+~ algo : first sort objects by cost
+~ recurrence : optimal expected search time for contiguous objects from i to j, C_i_j = 
+	min (for r in i:j ::::  sum(p_k for k in i:j)  +   C_i_r-1    +    C_r+1_j    )
+~ note : when root is chosen as first or last index, one of the subtrees is 0
+~ 2D array, one dimension is start of interval i one dimension is start of interval j ,solve in order of number of objects in subproblem.
+
+~ Bellman-Ford for Single-Source Shortest Paths O(n^3) arguably O(mn)
+~ input : directed graph with edge lengths and a designated source vertex, no parallel edges, 
+~ output : compute shortest path length from source to all other vertices, or return a negative cycles.
+~ assumptions : no negative cycles. Bellman-Ford can be augmented to detect and return them.
+~ Dijkstra doesn't necessarily work with negative edge lengths, also not distributed so can't do giant, dynamic stuff like internet routing on computationally limited routers. routes always changing, graph is big, router is small
+~ shortest cycle free path in the presence of negative cycles is NP-hard
+~ if shortest path is of length >= n, it's got a negative cycle
+~ Bellman-Ford is a Dynamic Programming Algorithm
+~ Optimal Substructure
+~ Subproblem Size : number of edges 
+~ subproblems indexed by : desination_vertex and max_number_edges
+~ Recurrence : for given problem P_d_e .. where d is the destination and e is the edge budget
+	min( 
+	P_d_e = P_d_e-1 .... if the optimal path has < e edges 
+	P_d_e = min(P_f_e-1 + distance(f_i,d)) .... if the optimal path has e edges ... where f = {i: vertices one hop away from d}
+	)
+~ if there's no path, distance is +inf
+~ assuming no negative cycles allows i to range from 0 to n-1
+~ 2-D array : edge budget and destination node. loop in increasing edge_budget 
+~ if there exists a path from a vertex to itself with negative total length, then there is a negative cycle
+~ Stopping Early is possible. If i shortest paths all the same as i + 1 shortest paths, we can stop early
+~ detecting negative cycles : need to run for n iterations. prof is saying if n-1 == n then no negative cycles, assuming all verts finite reachable 
+~ space optimization : as soon as we compute shortest paths for i edge_budget, we can throw away shortest paths for i-1 edge_budget. 
+	time cost of deletion???
+	if you only want the value, can throw out. if you want solution itself, need reconstruction algorithm on entire table
+~ in bellman ford, can reconstruct solutions throwing out i-1 solutions. have each entry in the table point to its predecessor vertex.
+~ cycles can be reconstructed, too. need to check for cycles among pointers using BFS
+~ ???? Space Optimization Possible for other dynamic problems we covered?
+
+
+
+All Pairs Shortest Paths
+~ input : directed graph with positive or negative edges, no source vertex.
+~ output : compute shorest path for each pair of vertices.
+~ assumption : no negative cycles, otherwise need to return the cycle and terminate 
+~ can run single-source shortest paths n times, once on each possible source vertex
+	for non-negative edge lengths : use Dijkstra. on sparse graph, O(n^2 * logn), on dense O(n^3 * logn)
+	for negative edge lengths : use Bellman-Ford. O(n^3) or O(n^4) depending on sparse vs. dense
+~ Optimal Substructure : subproblem defined by: origin, destination, can only use first n (arbitrarily ordered) vertices.
+	solution to a subproblem is the length of the shortest path from the origin, to the destination, using only vertices chosen from the first n
+	solution to P(v,w,k) = min(
+		P(v,w,k-1), best solution if k is not part of the solution
+		P(v,k,k-1) + P(k,w,k-1), best solution if k is part of the solution
+				)
+
+~ Transitive Closure of a binary relation : are they connected? 
+
+Floyd-Warshall O(n^3) : best solution for negative edge length graphs, and dense non-negatives
+~ 3-Dimensional array: when k is 0: value is 0, edge cost between i and j, infinity respectively when i == j, ij is an edge, ij is not an edge
+~ loop over k from 0 to n, order of i and j loops doesn't matter. 
+~ to detect negative cycles, look at A[i,i,0] for all i from 1 to n. At least one will be negative
+~ for reconstruction, remember max vertice on i j optimal path
+
+Reweighting Technique
+~ vertex weights
+~ reweighted_edge = edge + tail_vertex_weight - head_vertex_weight
+~ reweighted_shortest_path = shortest_path + source_weight - sink_weight
+~ this transformations preserves the shortest path from v to w
+~ if we transform graph such that all edges are non-negative, we can use dijkstra. always possible with one bellman-ford, assuming no negative cycles
+
+Johnson's Algorithm O(nmlogn) possible for general edge lengths. one bellman ford + n dijkstra. if there's a negative cycle, we return it.
+~ uses reweighting technique to produce non-negative edge lengths, use bellman ford once, then dijkstra n times.
+~ step 1 : compute vertex weights s.t. graph has only non-negative edges. 
+~ add a vertex with edges pointing to each vertex, edge length 0 O(n)
+~ call bellman-ford with this new vertex as its source. shortest paths will be non-positive O(mn)
+~ define the weight of a vertex v to be equal to the shortest path distance from magic_vertex to v O(m) 
+~ transform the edges according to the above formula, they will all be non-negative
+~ now call dijkstra on each vertex. O(mnlogn)
+~ once each shortest path is calculated subtract the source node weight and add the sink node weight O(n^2)
+
+Dynamic Programming is good for problems with "sequential" input
+
+FINANCIAL TRANSACTIONS GRAPH DATA STRUCTURE BELLMAN-FORD ETC.
+
+NP-Complete
+~ Polynomial-Time Solvable : O(n^k) where n is size of input and k is a constant. n can be number of key strokes
+~ P : the set of all polynomial-time solvable problems. (exceptions in this course : cycle free shortest path with negative cycles, knapsack) 
+~ rough litmus test of computational tractability
+~ Travelling Salesman Problem : no known polynomial solution. can be solved in factorial time. as hard as any brute force problem.
+	input : complete, undirected graph with nonnegative edge costs.  
+	output : path traversing all vertices that minimizes sum of edges
+~ Reduction : problem A reduces to problem B if, given an algorithm that solves B in polynomial time, you can solve A in polynomial time 
+~ if B is P and A reduces to B, then A is P. If A is not P and A reduces to B, then B is not P.
+~ A problem is X-Complete if for a set of problems X, the problem is a member of X and all problems in X reduce to it
+~ TSP at least as hard as all brute force solvable problems
+~ NP : problems solveable using brute force search. 
+	1.) solutions have length polynomial in terms of input size
+	2.) proposed solutions can be verified in polynomial time.
+~ if a problem is NP-complete, it probably can't be solved in P, ie. computationally intractable
+~ 1000's of important problems are NP-complete 
+~ NP-complete problems need different strategies
+~ to prove A in NP-complete, find a B that's NP-complete and reduce is to A.
+~ if a problem is really hard, try to prove it's NP-complete.
+~ strategies for solving NP-complete problems
+	focus on special cases 
+	heuristics
+	exponential but better than brute force	
+
+QUESTION: if problem A reduces to problem B, doesn't that mean problem A is at least as hard as B.(ie. requires multiple invocations of B, etc.)
+
+KNAPSACK IS NP!?!!??!
+
+Vertex Cover
+~ input : undirected graph
+~ output : min size of a vertex cover. a subset of vertices s.t. for every edge at least one of the edge's endpoints is in our subset
+~ ex. vertices are people, weighted with salaries, edges are tasks. you need all tasks to be completed at min cost. use hyperedges b.c. maybe one task 		has more than just 2 candidates. one person might get stuck with 2 jobs 
+~ consider graph G, with edge <u,v> and an integer k >= 1
+	G has a vertex cover of size k iff
+	G with u and its edges deleted has a cover of k-1 OR G with v and its edges deleted has a cover of k-1
+~ given graph and k
+	choose edge <u,v>
+	recurse on G with u deleted and k-1, if no solution, try deleting v if no solution, no solution period
+~ each has_size_k_vertex_cover(G,k) requires 2^k recursive calls, m work per recursive call so O(m*2^k) better than nchoosek for small k ,n^k
+	k = O(logn) ok
+~ finding min k: start with k=1 and solve has_size_k_vertex_cover(G,k) until you get a k that works.
+~ ??? is the maximum-size independent set the complement of the minimum-size vertex cover
+
+Travelling Salesman Problem O(n^2 * 2^n) vs. brute force n! (by n=10, already 35 times better)
+~ start vertex is fixed
+~ Subproblems : defined by destination vertex j and vertice subset S (the vertices that must on the path from 1 to j, incldes 1 and j). size = card S
+~ Recurrence : note C is cost of an edge. For some j and S, the optimal subproblem of problem TSP_j_S = 
+	min (
+		TSP_k_S-j + C_k_j where k is chosen from S and k!=j
+		)
+	base case : A[S,1] =  0 if S = {1} ... otherwise +inf
+~ algo : loop over cardinality C, loop over set S of cardinality C containing 1, loop over j in S where j!=1
+~ answer : min (A[S_of_max_size,j] + C_j_1) ... ie. you are looping over j's keeping S constant 
+
+### Approximations
+
+~ Greedy and Dynamic Knapsack Heuristics
+~ Greedy O(nlogn)
+~ sort items by value to weight ratio, add them one at a time until you're full or have looked at all items. Skip whatever doesn't fit. 
+~ return solution generated above, or the most valuable item (that fits). guaranteed to be >=50% of optimal
+~ 1/2 approximation algorithm
+~ fractional solution : keep adding by ratio until you hit an item that doesn't fit, add the fraction of the item that makes the knapsack full.
+~ Dynamic
+~ running time depends on how good of an answer you want. Can get arbitrarily close to the optimal solution.
+~ alt : if values are all integers, can solve in O(n**2 * v_max). if V's are polynomial in n, then solvable in poly time. 
+~ ^ relaxation : round all values to the nearest integer
+
+Maximum Cut (ex. of local search) NP-Complete
+~ find cut that maximizes the number of crossing edges
+~ special case: bipartite graph. solved in O(n) using BFS odd out, even in. Bipartite graph : a graph which has a cut s.t. each edge is a crossing edge
+~ begin with arbitrary cut, loop over vertices, count their crossing and non-crossing edges, if crossing<not then move it to other side of cut.
+~ keep doing that until there are no switching verts.
+~ max nchoose2 iterations, because each iteration increases crossing edges by at least 1.  
+~ guarantees max cut is >=50% of all the edges of the graph.
+~ generalization : maximum weighted cut (each edge has a weight). Local Search has same 50% performance guarantee. takes longer.
+
+
+Local Search
+~ heuristic design paradigm
+~ iterative improvement of solution (ex. backprop)
+~ objective function 
+~ neighborhood : need to define the neighbors of a potential solution. ex. solutions that could be obtained by moving one vertex
+~ *initialize : randomly or based on domain knowledge / intermediate solution via different algorithm
+~ move to a neighbor with a better objfunc value until no such neighbors exist
+~ strategy #1 : run local search many times, initializing randomly, choose best solution.
+~ strategy #2 : submit your non-local algorithm solution, use local search as a post-processing step.
+~ *choosing neighbor : domain knowledge heuristics or choose randomly or choose best one 
+~ *define neighborhoods : sometimes ambiguous, use domain knowledge based on empirical observation. ex. can switch k vertices at a time.
+	larger neighborhoods can return better solutions, but take more time.
+~ termination : guaranteed if space finite and each iteration improves objective function. usually not in polynomial time, solution might suck.
+
+2-SAT Problem
+~ randomized local search algo guaranteed to solve in polynomial time
+~ input : n boolean variables, m clauses of 2 literals
+~ output : boolean. possible or not possible to satisfy all clauses?
+~ reduction to finding strongly connected components. also "backtracking" proof start with x1 = true, if possible, x2 = true, etc. otherwise x1 = false
+~ Papdimitriou : log2_n runs. initialize randomly. each run has 2n^2 steps. each iteration of local search, pick an unsatified clause, flip one of its 			vars. 
+~   
+
+
+3-SAT is NP-Complete
+~ randomized local search can do better than brute force search
+~ (4/3)^n vs. 2^n
+
+
+Max-Flow
+~ input : directed graph with designated source and sink vertex and weights (capacities) for each edge
+~ output : the maximum flow that can leave the source and reach the sink
+~ constraint : the amount of flow going into a node must equal the amount going out.
+~ algo : Ford-Fulkerson method
+~ residual network : each edge in the original graph is replaced by two edges. 
+	the matching forward edge = remaining capacity
+	the mirroring backward edge = used capacity
+~ while there exists an augmenting path (a path on the residual network from source to sink)
+	choose one of these paths. 
+	find the smallest weight of an edge on the path
+	subtract that weight from all the edges in your path, and add it to their dopelgangers
+	also keep track of a global variable : max-flow, duh...
+ 
+
+
+
+### Local Search
+
+Relax the problem
+
+Smoothed Analysis
+
+Semi-Definite Programming
+
+super polynomial
+
+
+
+
+
+
+Note : the n invocations of djikstra can be parallelized
+
+
+Why should I care?
+Examples?
+
+
+Hypergraph
+
+
+
+Structure of the Web
+~ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
