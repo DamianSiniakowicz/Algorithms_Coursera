@@ -186,7 +186,20 @@ for i in range(1):
 '''
 TSP review
 
+read in data
+store nodes in a vector of 2-arrays. 
 
+loop over nodes, where indices <=10 of each other
+store distances between pairs in a map. store both permutations of vertices ex. {(x,y) -> 5, (y,x) -> 5}
+
+
+
+
+loop over set size (btwn 2 and 25)
+	loop over sets of that size (each set must contain 1, and consecutive elements' indices must be within 10 of each other)
+		loop over nodes in the set (each member except 1 gets to try out being the destination node)
+			base case : set size is 2. Path length is distance between nodes. 
+			otherwise use the recurrence: dist from j to k plus min path to j using nodes in S except k.
 
 
 '''
